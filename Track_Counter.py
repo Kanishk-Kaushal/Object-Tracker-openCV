@@ -1,4 +1,4 @@
-#python3 Track_Counter.py --source "test_walking_people.mp4"  --classes 0 --dwell-time
+#python3 Track_Counter.py --source "test_walking_people.mp4"  --classes 0 --dwell-time --no-save
 
 import os
 import sys
@@ -186,10 +186,10 @@ def detect(save_img=False, line_thickness=1):
         if classify:
             pred = apply_classifier(pred, modelc, img, im0s)
 
-
-
+     
         # Process detections
         for i, det in enumerate(pred):  # detections per image
+           
             if webcam:  # batch_size >= 1
                 p, s, frame = path[i], '%g: ' % i, dataset.count
                 im0 = im0s[i].copy()
@@ -264,19 +264,17 @@ def detect(save_img=False, line_thickness=1):
                           
                         if dwell_time:
                             # object trajectory
+                            fpsx = fps = vid_cap.get(cv2.CAP_PROP_FPS)  
+
                             
                             center = ((int(bboxes[0]) + int(bboxes[2])) // 2,(int(bboxes[1]) + int(bboxes[3])) // 2)
                             if id not in trajectory:
                                 trajectory[id] = []
-                                dtime[id] = datetime.now()
-                                dwellx[id] = 0
-                                                              
+                               
+                                
                             else:
-                                curr_time = datetime.now()
-                                old_time = dtime[id]
-                                time_diff = curr_time - old_time
-                                sec = time_diff.total_seconds()
-                                dwellx[id] = sec   
+
+                                dwellx[id] += 1/(fpsx)
                                 
                                
                             trajectory[id].append(center)
@@ -310,8 +308,12 @@ def detect(save_img=False, line_thickness=1):
                             
                            
                     print("People Count: ", id)
-                    avg_dwellTime = int(sum(dwellx.values())/len(dwellx))                         
-                    print("Average Dwell TIme: ", avg_dwellTime, "s")
+                    try:
+                        avg_dwellTime = int(sum(dwellx.values())/len(dwellx))  
+                        print("Average Dwell TIme: ", avg_dwellTime, "s")
+                    except:
+                        pass                       
+                    
                 print(f'{s}Done. YOLO:({t3 - t2:.3f}s), StrongSORT:({t5 - t4:.3f}s)')
 
             else:
